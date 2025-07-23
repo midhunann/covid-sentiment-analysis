@@ -1,0 +1,26 @@
+# Core data analysis and manipulation
+pandas>=1.5.0
+numpy>=1.21.0
+
+# Data visualization
+matplotlib>=3.5.0
+seaborn>=0.11.0
+
+# Statistical analysis and machine learning
+scipy>=1.9.0
+scikit-learn>=1.1.0
+
+# Natural Language Processing
+vaderSentiment>=3.3.2
+textblob>=0.17.1
+nltk>=3.8
+
+# Date and time manipulation
+python-dateutil>=2.8.0
+
+# Jupyter notebook support
+jupyter>=1.0.0
+ipykernel>=6.0.0
+
+# Additional utilities
+warnings
