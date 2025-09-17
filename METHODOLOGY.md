@@ -19,7 +19,7 @@ This document provides comprehensive information about the analytical methods, t
 
 ## Overview
 
-The project employs advanced analytical techniques across multiple domains including Natural Language Processing (NLP), time-series analysis, statistical modeling, and data visualization to investigate complex relationships during the COVID-19 pandemic.
+This comprehensive methodology document details the analytical techniques employed across 10 research questions investigating complex relationships between public sentiment, mobility patterns, government policies, and epidemiological outcomes during the COVID-19 pandemic. The methodology integrates Natural Language Processing (NLP), advanced time-series analysis, statistical modeling, machine learning, and professional data visualization techniques.
 
 ---
 
@@ -296,7 +296,256 @@ def correct_multiple_comparisons(p_values, method='bonferroni'):
 - **Correlation coefficients**: For relationship strength
 - **Confidence intervals**: For uncertainty quantification
 
-### 3.3 Advanced Pattern Recognition
+### 3.3 Extended Research Methodologies (RQ6-RQ10)
+
+#### Topic Evolution Analysis (RQ6)
+```python
+def detect_exponential_growth(cases_series, threshold=0.05, window=7):
+    """Detect exponential case growth phases"""
+    # Calculate growth rate
+    growth_rate = cases_series.rolling(window=window).apply(
+        lambda x: (x.iloc[-1] / x.iloc[0]) ** (1/window) - 1
+    )
+    
+    # Identify exponential phases
+    exponential_phases = growth_rate > threshold
+    return exponential_phases
+```
+
+#### Regional Discrepancy Analysis (RQ7)
+```python
+def calculate_peak_discrepancy(mobility_series, sentiment_series):
+    """Calculate temporal and magnitude gaps between peaks"""
+    # Find peaks
+    mobility_peak_idx = mobility_series.idxmax()
+    sentiment_peak_idx = sentiment_series.idxmax()
+    
+    # Time gap (days)
+    time_gap = (sentiment_peak_idx - mobility_peak_idx).days
+    
+    # Magnitude gap (normalized)
+    mobility_norm = (mobility_series - mobility_series.min()) / (mobility_series.max() - mobility_series.min())
+    sentiment_norm = (sentiment_series - sentiment_series.min()) / (sentiment_series.max() - sentiment_series.min())
+    magnitude_gap = abs(sentiment_norm[sentiment_peak_idx] - mobility_norm[mobility_peak_idx])
+    
+    return time_gap, magnitude_gap
+```
+
+#### Predictive Analysis (RQ8)
+```python
+def sentiment_prediction_analysis(sentiment_series, cases_series, lead_times=[7, 10, 14]):
+    """Analyze sentiment as leading indicator for cases"""
+    results = []
+    
+    for lead_days in lead_times:
+        # Shift cases series backward by lead_days
+        future_cases = cases_series.shift(-lead_days)
+        
+        # Remove NaN values
+        valid_data = pd.DataFrame({
+            'sentiment': sentiment_series,
+            'future_cases': future_cases
+        }).dropna()
+        
+        # Calculate correlation
+        correlation = valid_data['sentiment'].corr(valid_data['future_cases'])
+        
+        # Significance test
+        n = len(valid_data)
+        t_stat = correlation * np.sqrt((n - 2) / (1 - correlation**2))
+        p_value = 2 * (1 - stats.t.cdf(np.abs(t_stat), n - 2))
+        
+        results.append({
+            'lead_days': lead_days,
+            'correlation': correlation,
+            'p_value': p_value,
+            'n_observations': n
+        })
+    
+    return pd.DataFrame(results)
+```
+
+#### Resilience Analysis (RQ9)
+```python
+def calculate_sentiment_resilience(sentiment_series):
+    """Calculate sentiment resilience metrics"""
+    # Find minimum sentiment point
+    min_idx = sentiment_series.idxmin()
+    min_value = sentiment_series.min()
+    
+    # Recovery period (after minimum)
+    recovery_series = sentiment_series.loc[min_idx:]
+    
+    # Recovery slope (linear regression)
+    x = np.arange(len(recovery_series))
+    slope, intercept, r_value, p_value, std_err = stats.linregress(x, recovery_series.values)
+    
+    # Volatility (standard deviation)
+    volatility = sentiment_series.std()
+    
+    # Resilience score (combination metric)
+    resilience_score = (slope * 10) - (volatility * 5) + (recovery_series.mean() * 2)
+    
+    return {
+        'recovery_slope': slope,
+        'volatility': volatility,
+        'resilience_score': resilience_score,
+        'min_sentiment': min_value,
+        'recovery_r_squared': r_value**2
+    }
+```
+
+#### Coupling Analysis (RQ10)
+```python
+def analyze_policy_behavior_coupling(policy_series, mobility_series, sentiment_series, window=7):
+    """Analyze coupling/decoupling between policy, behavior, and sentiment"""
+    coupling_metrics = []
+    
+    # Rolling correlation analysis
+    for i in range(window, len(policy_series)):
+        subset_policy = policy_series.iloc[i-window:i+1]
+        subset_mobility = mobility_series.iloc[i-window:i+1]
+        subset_sentiment = sentiment_series.iloc[i-window:i+1]
+        
+        # Policy-mobility coupling
+        pm_corr = subset_policy.corr(subset_mobility)
+        
+        # Policy-sentiment coupling  
+        ps_corr = subset_policy.corr(subset_sentiment)
+        
+        # Mobility-sentiment coupling
+        ms_corr = subset_mobility.corr(subset_sentiment)
+        
+        # Overall coupling strength
+        overall_coupling = (abs(pm_corr) + abs(ps_corr) + abs(ms_corr)) / 3
+        
+        coupling_metrics.append({
+            'date': policy_series.index[i],
+            'policy_mobility_coupling': pm_corr,
+            'policy_sentiment_coupling': ps_corr,
+            'mobility_sentiment_coupling': ms_corr,
+            'overall_coupling': overall_coupling
+        })
+    
+    return pd.DataFrame(coupling_metrics)
+```
+
+---
+
+## 4. Machine Learning & Pattern Recognition
+
+### 4.1 Clustering Analysis
+
+#### K-Means Policy Regime Classification
+```python
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+
+def classify_policy_regimes(policy_data, n_clusters=3):
+    """Classify policy combinations into regimes"""
+    # Features: stringency and economic support
+    features = policy_data[['stringency_index', 'economic_support']].dropna()
+    
+    # Standardize features
+    scaler = StandardScaler()
+    features_scaled = scaler.fit_transform(features)
+    
+    # K-means clustering
+    kmeans = KMeans(n_clusters=n_clusters, random_state=42)
+    clusters = kmeans.fit_predict(features_scaled)
+    
+    # Add cluster labels to data
+    policy_data_clustered = policy_data.copy()
+    policy_data_clustered['policy_regime'] = clusters
+    
+    return policy_data_clustered, kmeans, scaler
+```
+
+### 4.2 Advanced Topic Modeling
+
+#### Latent Dirichlet Allocation (LDA)
+```python
+from gensim import corpora, models
+from gensim.models import CoherenceModel
+
+def perform_topic_modeling(processed_texts, num_topics=10):
+    """Advanced topic modeling with coherence optimization"""
+    # Create dictionary and corpus
+    dictionary = corpora.Dictionary(processed_texts)
+    dictionary.filter_extremes(no_below=5, no_above=0.5)
+    corpus = [dictionary.doc2bow(text) for text in processed_texts]
+    
+    # Optimize number of topics using coherence score
+    coherence_scores = []
+    topic_ranges = range(5, 21, 2)
+    
+    for num_topics in topic_ranges:
+        lda_model = models.LdaModel(
+            corpus=corpus,
+            id2word=dictionary,
+            num_topics=num_topics,
+            random_state=42,
+            passes=10,
+            alpha='auto',
+            per_word_topics=True
+        )
+        
+        coherence_model = CoherenceModel(
+            model=lda_model,
+            texts=processed_texts,
+            dictionary=dictionary,
+            coherence='c_v'
+        )
+        
+        coherence_scores.append(coherence_model.get_coherence())
+    
+    # Select optimal number of topics
+    optimal_topics = topic_ranges[np.argmax(coherence_scores)]
+    
+    # Train final model
+    final_model = models.LdaModel(
+        corpus=corpus,
+        id2word=dictionary,
+        num_topics=optimal_topics,
+        random_state=42,
+        passes=20,
+        alpha='auto',
+        per_word_topics=True
+    )
+    
+    return final_model, dictionary, corpus, optimal_topics
+```
+
+### 4.3 Principal Component Analysis (PCA)
+
+#### Dimensionality Reduction for Complex Relationships
+```python
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+
+def mobility_emotion_pca(mobility_data, emotion_data):
+    """PCA analysis of mobility-emotion relationships"""
+    # Combine datasets
+    combined_data = pd.concat([mobility_data, emotion_data], axis=1).dropna()
+    
+    # Standardize features
+    scaler = StandardScaler()
+    data_scaled = scaler.fit_transform(combined_data)
+    
+    # PCA transformation
+    pca = PCA(n_components=0.95)  # Retain 95% variance
+    data_pca = pca.fit_transform(data_scaled)
+    
+    # Component interpretation
+    feature_names = combined_data.columns
+    component_df = pd.DataFrame(
+        pca.components_,
+        columns=feature_names,
+        index=[f'PC{i+1}' for i in range(pca.n_components_)]
+    )
+    
+    return data_pca, pca, component_df, pca.explained_variance_ratio_
+```
 
 #### Principal Component Analysis (PCA)
 ```python
